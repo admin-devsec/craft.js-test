@@ -5,7 +5,7 @@
 import React from 'react';
 import { Element, useEditor, useNode } from '@craftjs/core';
 import { usePreview } from '@/components/builder/PreviewContext';
-import { ColorControl, FLEX_ALIGN, FLEX_JUSTIFY, NumberControl, SelectControl } from './shared';
+import { ColorControl, FLEX_ALIGN, FLEX_JUSTIFY, NodeFrame, NumberControl, SelectControl } from './shared';
 
 const DISALLOWED_INNER = ['Header', 'Footer'];
 
@@ -17,7 +17,7 @@ export function FlexSlot({ children, justify = 'start', align = 'center', gap = 
   const { device } = useEditor((state) => ({ device: (state.options as any).device || 'desktop' }));
   const hidden = (device === 'desktop' && hiddenDesktop) || (device === 'tablet' && hiddenTablet) || (device === 'mobile' && hiddenMobile);
   if (hidden) return null;
-  return <div ref={(ref) => { if (ref) connect(drag(ref)); }} className={`${isPreview ? '' : `min-h-[30px] rounded border border-dashed ${selected ? 'border-blue-500' : 'border-slate-300'}`} flex-1`} style={{ display: 'flex', justifyContent: FLEX_JUSTIFY[justify], alignItems: FLEX_ALIGN[align], gap, flexWrap: wrap ? 'wrap' : 'nowrap' }}>{children}</div>;
+  return <NodeFrame connectDrag={(ref) => connect(drag(ref))} className={`${isPreview ? '' : `min-h-[30px] rounded border border-dashed ${selected ? 'border-blue-500' : 'border-slate-300'}`} flex-1`} style={{ display: 'flex', justifyContent: FLEX_JUSTIFY[justify], alignItems: FLEX_ALIGN[align], gap, flexWrap: wrap ? 'wrap' : 'nowrap' }}>{children}</NodeFrame>;
 }
 function SlotSettings() {
   const { actions: { setProp }, justify, align, gap, wrap, hiddenDesktop, hiddenTablet, hiddenMobile } = useNode((node) => node.data.props);
@@ -31,11 +31,11 @@ export function Header({ children, background = '#ffffff', textColor = '#0f172a'
   const { device } = useEditor((state) => ({ device: (state.options as any).device || 'desktop' }));
   const direction = device === 'desktop' ? desktopLayout : device === 'tablet' ? tabletLayout : mobileLayout;
   return (
-    <header ref={(ref) => { if (ref) connect(drag(ref)); }} className={`${isPreview ? '' : selected ? 'ring-2 ring-blue-500' : 'border border-dashed border-slate-300'} ${sticky ? 'sticky top-0 z-20' : ''}`} style={{ background: transparent ? 'transparent' : background, color: textColor, borderBottom: `1px solid ${borderColor}`, boxShadow: shadow ? '0 4px 16px rgba(15,23,42,0.12)' : 'none', minHeight: height }}>
+    <NodeFrame connectDrag={(ref) => connect(drag(ref))} className={`${isPreview ? '' : selected ? 'ring-2 ring-blue-500' : 'border border-dashed border-slate-300'} ${sticky ? 'sticky top-0 z-20' : ''}`} style={{ background: transparent ? 'transparent' : background, color: textColor, borderBottom: `1px solid ${borderColor}`, boxShadow: shadow ? '0 4px 16px rgba(15,23,42,0.12)' : 'none', minHeight: height }}>
       <div style={{ maxWidth, margin: '0 auto', padding: `0 ${paddingX}px`, minHeight: height, display: 'flex', alignItems: 'center', gap: 12, flexDirection: direction }}>
         {children || <><Element id="header-left" is={FlexSlot} canvas /><Element id="header-center" is={FlexSlot} canvas justify="center" /><Element id="header-right" is={FlexSlot} canvas justify="end" /></>}
       </div>
-    </header>
+    </NodeFrame>
   );
 }
 function HeaderSettings() {
@@ -47,7 +47,7 @@ Header.craft = { props: { background: '#ffffff', textColor: '#0f172a', borderCol
 export function Footer({ children, background = '#0f172a', textColor = '#f8fafc', borderColor = '#334155', shadow = false, paddingY = 40, maxWidth = 1200, columnGap = 20, rowGap = 20, divider = true }: any) {
   const { connectors: { connect, drag }, selected } = useNode((state) => ({ selected: state.events.selected }));
   const { isPreview } = usePreview();
-  return <footer ref={(ref) => { if (ref) connect(drag(ref)); }} className={`${isPreview ? '' : selected ? 'ring-2 ring-blue-500' : 'border border-dashed border-slate-300'}`} style={{ background, color: textColor, borderTop: `1px solid ${borderColor}`, boxShadow: shadow ? '0 -4px 16px rgba(15,23,42,0.18)' : 'none', padding: `${paddingY}px 0` }}><div style={{ maxWidth, margin: '0 auto', padding: '0 20px', display: 'grid', gap: rowGap }}>{children || <><Element id="footer-top" is={FlexSlot} canvas justify="between" /><div style={{ borderTop: divider ? `1px solid ${borderColor}` : 'none', paddingTop: 20, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: columnGap }}><Element id="footer-columns" is={FlexSlot} canvas align="start" wrap gap={columnGap} /></div><div style={{ borderTop: divider ? `1px solid ${borderColor}` : 'none', paddingTop: 16 }}><Element id="footer-bottom" is={FlexSlot} canvas justify="between" /></div></>}</div></footer>;
+  return <NodeFrame connectDrag={(ref) => connect(drag(ref))} className={`${isPreview ? '' : selected ? 'ring-2 ring-blue-500' : 'border border-dashed border-slate-300'}`} style={{ background, color: textColor, borderTop: `1px solid ${borderColor}`, boxShadow: shadow ? '0 -4px 16px rgba(15,23,42,0.18)' : 'none', padding: `${paddingY}px 0` }}><div style={{ maxWidth, margin: '0 auto', padding: '0 20px', display: 'grid', gap: rowGap }}>{children || <><Element id="footer-top" is={FlexSlot} canvas justify="between" /><div style={{ borderTop: divider ? `1px solid ${borderColor}` : 'none', paddingTop: 20, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: columnGap }}><Element id="footer-columns" is={FlexSlot} canvas align="start" wrap gap={columnGap} /></div><div style={{ borderTop: divider ? `1px solid ${borderColor}` : 'none', paddingTop: 16 }}><Element id="footer-bottom" is={FlexSlot} canvas justify="between" /></div></>}</div></NodeFrame>;
 }
 function FooterSettings() {
   const { actions: { setProp }, ...props } = useNode((node) => node.data.props);

@@ -6,14 +6,14 @@
 import React from 'react';
 import { useNode } from '@craftjs/core';
 import { usePreview } from '@/components/builder/PreviewContext';
-import { ColorControl, NumberControl, SelectControl } from './shared';
+import { ColorControl, NodeFrame, NumberControl, SelectControl } from './shared';
 
 type WithChildren<T = Record<string, unknown>> = T & { children?: React.ReactNode };
 
 export function Container({ children, background = '#ffffff', padding = 20 }: WithChildren<{ background?: string; padding?: number }>) {
   const { connectors: { connect, drag }, selected } = useNode((state) => ({ selected: state.events.selected }));
   const { isPreview } = usePreview();
-  return <div ref={(ref) => { if (ref) connect(drag(ref)); }} style={{ background, padding }} className={`min-h-12 rounded ${isPreview ? '' : `border border-dashed ${selected ? 'border-blue-500' : 'border-slate-300'}`}`}>{children}</div>;
+  return <NodeFrame connectDrag={(ref) => connect(drag(ref))} style={{ background, padding }} className={`min-h-12 rounded ${isPreview ? '' : `border border-dashed ${selected ? 'border-blue-500' : 'border-slate-300'}`}`}>{children}</NodeFrame>;
 }
 function ContainerSettings() {
   const { actions: { setProp }, background, padding } = useNode((node) => ({ background: node.data.props.background, padding: node.data.props.padding }));
@@ -38,7 +38,7 @@ Container.craft = {
 export function Text({ text = 'Edit me', fontSize = 18, color = '#0f172a' }: { text?: string; fontSize?: number; color?: string }) {
   const { connectors: { connect, drag }, selected } = useNode((state) => ({ selected: state.events.selected }));
   const { isPreview } = usePreview();
-  return <p ref={(ref) => { if (ref) connect(drag(ref)); }} style={{ fontSize, color }} className={`my-1 ${isPreview ? '' : `cursor-move ${selected ? 'outline outline-2 outline-blue-500' : ''}`}`}>{text}</p>;
+  return <NodeFrame connectDrag={(ref) => connect(drag(ref))} style={{ fontSize, color }} className={`my-1 ${isPreview ? '' : `cursor-move ${selected ? 'outline outline-2 outline-blue-500' : ''}`}`}>{text}</NodeFrame>;
 }
 function TextSettings() {
   const { actions: { setProp }, text, fontSize, color } = useNode((node) => ({ text: node.data.props.text, fontSize: node.data.props.fontSize, color: node.data.props.color }));
@@ -49,7 +49,7 @@ Text.craft = { props: { text: 'Edit me', fontSize: 18, color: '#0f172a' }, relat
 export function Button({ text = 'Click me', background = '#2563eb', color = '#ffffff' }: { text?: string; background?: string; color?: string }) {
   const { connectors: { connect, drag }, selected } = useNode((state) => ({ selected: state.events.selected }));
   const { isPreview } = usePreview();
-  return <button type="button" ref={(ref) => { if (ref) connect(drag(ref)); }} style={{ background, color }} className={`rounded px-4 py-2 font-semibold ${isPreview ? '' : selected ? 'ring-2 ring-blue-500' : ''}`}>{text}</button>;
+  return <NodeFrame connectDrag={(ref) => connect(drag(ref))} inline><button type="button" style={{ background, color }} className={`rounded px-4 py-2 font-semibold ${isPreview ? '' : selected ? 'ring-2 ring-blue-500' : ''}`}>{text}</button></NodeFrame>;
 }
 function ButtonSettings() {
   const { actions: { setProp }, text, background, color } = useNode((node) => ({ text: node.data.props.text, background: node.data.props.background, color: node.data.props.color }));
@@ -60,7 +60,7 @@ Button.craft = { props: { text: 'Click me', background: '#2563eb', color: '#ffff
 export function Brand({ text = 'Acme', logoUrl = '', useImage = false, color = '#111827', fontSize = 24, fontWeight = 700, letterSpacing = 0 }: any) {
   const { connectors: { connect, drag }, selected } = useNode((state) => ({ selected: state.events.selected }));
   const { isPreview } = usePreview();
-  return <div ref={(ref) => { if (ref) connect(drag(ref)); }} className={`${isPreview ? '' : selected ? 'ring-2 ring-blue-500' : ''} inline-flex items-center`} style={{ color, fontSize, fontWeight, letterSpacing }}>{useImage && logoUrl ? <img src={logoUrl} alt={text} className="h-10 w-auto" /> : text}</div>;
+  return <NodeFrame connectDrag={(ref) => connect(drag(ref))} inline className={`${isPreview ? '' : selected ? 'ring-2 ring-blue-500' : ''} inline-flex items-center`} style={{ color, fontSize, fontWeight, letterSpacing }}>{useImage && logoUrl ? <img src={logoUrl} alt={text} className="h-10 w-auto" /> : text}</NodeFrame>;
 }
 function BrandSettings() {
   const { actions: { setProp }, ...props } = useNode((node) => node.data.props);
@@ -71,7 +71,7 @@ Brand.craft = { props: { text: 'Acme', logoUrl: '', useImage: false, color: '#11
 export function Nav({ links = 'Home,Shop,About,Contact', orientation = 'row', gap = 16, color = '#111827' }: any) {
   const { connectors: { connect, drag }, selected } = useNode((state) => ({ selected: state.events.selected }));
   const { isPreview } = usePreview();
-  return <nav ref={(ref) => { if (ref) connect(drag(ref)); }} className={`${isPreview ? '' : selected ? 'ring-2 ring-blue-500' : ''} flex`} style={{ flexDirection: orientation, gap, color }}>{links.split(',').map((link: string) => <a key={link.trim()} href="#" className="hover:underline">{link.trim()}</a>)}</nav>;
+  return <NodeFrame connectDrag={(ref) => connect(drag(ref))} className={`${isPreview ? '' : selected ? 'ring-2 ring-blue-500' : ''} flex`} style={{ flexDirection: orientation, gap, color }}>{links.split(',').map((link: string) => <a key={link.trim()} href="#" className="hover:underline">{link.trim()}</a>)}</NodeFrame>;
 }
 function NavSettings() {
   const { actions: { setProp }, ...props } = useNode((node) => node.data.props);
@@ -81,7 +81,7 @@ Nav.craft = { props: { links: 'Home,Shop,About,Contact', orientation: 'row', gap
 
 export function IconButton({ icon = '☰', background = '#e2e8f0', color = '#111827' }: any) {
   const { connectors: { connect, drag } } = useNode();
-  return <button type="button" ref={(ref) => { if (ref) connect(drag(ref)); }} style={{ background, color }} className="rounded p-2">{icon}</button>;
+  return <NodeFrame connectDrag={(ref) => connect(drag(ref))} inline><button type="button" style={{ background, color }} className="rounded p-2">{icon}</button></NodeFrame>;
 }
 function IconButtonSettings() {
   const { actions: { setProp }, ...props } = useNode((node) => node.data.props);
@@ -91,7 +91,7 @@ IconButton.craft = { props: { icon: '☰', background: '#e2e8f0', color: '#11182
 
 export function SocialLinks({ links = 'twitter:x,github:gh,linkedin:in', gap = 8 }: any) {
   const { connectors: { connect, drag } } = useNode();
-  return <div ref={(ref) => { if (ref) connect(drag(ref)); }} className="flex" style={{ gap }}>{links.split(',').map((entry: string) => { const [label, icon] = entry.split(':'); return <a href="#" key={entry} className="rounded border px-2 py-1 text-xs">{icon || label}</a>; })}</div>;
+  return <NodeFrame connectDrag={(ref) => connect(drag(ref))} className="flex" style={{ gap }}>{links.split(',').map((entry: string) => { const [label, icon] = entry.split(':'); return <a href="#" key={entry} className="rounded border px-2 py-1 text-xs">{icon || label}</a>; })}</NodeFrame>;
 }
 function SocialLinksSettings() {
   const { actions: { setProp }, ...props } = useNode((node) => node.data.props);
@@ -101,7 +101,7 @@ SocialLinks.craft = { props: { links: 'twitter:x,github:gh,linkedin:in', gap: 8 
 
 export function LinkList({ title = 'Resources', links = 'Docs,Blog,Support' }: any) {
   const { connectors: { connect, drag } } = useNode();
-  return <div ref={(ref) => { if (ref) connect(drag(ref)); }}><h4 className="mb-2 font-semibold">{title}</h4><ul className="space-y-1 text-sm">{links.split(',').map((item: string) => <li key={item}><a href="#">{item.trim()}</a></li>)}</ul></div>;
+  return <NodeFrame connectDrag={(ref) => connect(drag(ref))}><h4 className="mb-2 font-semibold">{title}</h4><ul className="space-y-1 text-sm">{links.split(',').map((item: string) => <li key={item}><a href="#">{item.trim()}</a></li>)}</ul></NodeFrame>;
 }
 function LinkListSettings() {
   const { actions: { setProp }, ...props } = useNode((node) => node.data.props);
@@ -111,7 +111,7 @@ LinkList.craft = { props: { title: 'Resources', links: 'Docs,Blog,Support' }, re
 
 export function Divider({ color = '#cbd5e1', thickness = 1 }: any) {
   const { connectors: { connect, drag } } = useNode();
-  return <div ref={(ref) => { if (ref) connect(drag(ref)); }} style={{ background: color, height: thickness, width: '100%' }} />;
+  return <NodeFrame connectDrag={(ref) => connect(drag(ref))}><div style={{ background: color, height: thickness, width: '100%' }} /></NodeFrame>;
 }
 function DividerSettings() {
   const { actions: { setProp }, ...props } = useNode((node) => node.data.props);
@@ -121,7 +121,7 @@ Divider.craft = { props: { color: '#cbd5e1', thickness: 1 }, related: { settings
 
 export function Spacer({ size = 12 }: any) {
   const { connectors: { connect, drag } } = useNode();
-  return <div ref={(ref) => { if (ref) connect(drag(ref)); }} style={{ height: size, width: size }} />;
+  return <NodeFrame connectDrag={(ref) => connect(drag(ref))}><div style={{ height: size, width: size }} /></NodeFrame>;
 }
 function SpacerSettings() {
   const { actions: { setProp }, ...props } = useNode((node) => node.data.props);

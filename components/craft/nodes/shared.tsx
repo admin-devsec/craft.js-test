@@ -1,6 +1,8 @@
 'use client';
 
 import React from 'react';
+import { useEditor, useNode } from '@craftjs/core';
+import { usePreview } from '@/components/builder/PreviewContext';
 
 export const SWATCHES = ['#ffffff', '#0f172a', '#1e293b', '#334155', '#e2e8f0', '#2563eb', '#16a34a', '#f59e0b', '#dc2626'];
 
@@ -54,3 +56,48 @@ export const FLEX_ALIGN: Record<string, string> = {
   end: 'flex-end',
   stretch: 'stretch'
 };
+
+export function NodeFrame({
+  children,
+  className = '',
+  style,
+  connectDrag,
+  inline = false
+}: {
+  children: React.ReactNode;
+  className?: string;
+  style?: React.CSSProperties;
+  connectDrag: (element: HTMLElement) => void;
+  inline?: boolean;
+}) {
+  const { id, parent } = useNode((node) => ({ id: node.id, parent: node.data.parent }));
+  const { actions } = useEditor();
+  const { isPreview } = usePreview();
+  const showDelete = !isPreview && Boolean(parent);
+
+  return (
+    <div
+      ref={(ref) => {
+        if (ref) connectDrag(ref);
+      }}
+      className={`group relative ${inline ? 'inline-block' : 'block'} ${className}`}
+      style={style}
+    >
+      {children}
+      {showDelete && (
+        <button
+          type="button"
+          onMouseDown={(event) => event.stopPropagation()}
+          onClick={(event) => {
+            event.stopPropagation();
+            actions.delete(id);
+          }}
+          className="pointer-events-none absolute right-1 top-1 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white opacity-0 transition group-hover:pointer-events-auto group-hover:opacity-100"
+          aria-label="Delete component"
+        >
+          ×
+        </button>
+      )}
+    </div>
+  );
+}
