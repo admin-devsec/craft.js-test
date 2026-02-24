@@ -33,22 +33,26 @@ function Toolbox() {
     <aside className="space-y-3 rounded bg-white p-4 shadow">
       <h2 className="text-lg font-semibold">Toolbox</h2>
       <div className="grid gap-2">{baseNodes.map((item) => <button key={item.label} ref={(ref) => { if (ref) connectors.create(ref, item.element); }} className={itemClass}>{item.label}</button>)}</div>
-      <h3 className="pt-2 text-sm font-semibold">Header Presets</h3>
-      <div className="grid gap-2">{headerPresets.map((preset) => <button key={preset.label} ref={(ref) => { if (ref) connectors.create(ref, preset.element); }} className={itemClass}>{preset.label}</button>)}</div>
-      <h3 className="pt-2 text-sm font-semibold">Footer Presets</h3>
-      <div className="grid gap-2">{footerPresets.map((preset) => <button key={preset.label} ref={(ref) => { if (ref) connectors.create(ref, preset.element); }} className={itemClass}>{preset.label}</button>)}</div>
+      <details className="pt-2">
+        <summary className="cursor-pointer text-sm font-semibold">Header Presets</summary>
+        <div className="mt-2 grid gap-2">{headerPresets.map((preset) => <button key={preset.label} ref={(ref) => { if (ref) connectors.create(ref, preset.element); }} className={itemClass}>{preset.label}</button>)}</div>
+      </details>
+      <details className="pt-2">
+        <summary className="cursor-pointer text-sm font-semibold">Footer Presets</summary>
+        <div className="mt-2 grid gap-2">{footerPresets.map((preset) => <button key={preset.label} ref={(ref) => { if (ref) connectors.create(ref, preset.element); }} className={itemClass}>{preset.label}</button>)}</div>
+      </details>
     </aside>
   );
 }
 
 function SettingsPanel() {
-  const { selected } = useEditor((state, query) => {
+  const { selected, actions } = useEditor((state, query) => {
     const currentNodeId = query.getEvent('selected').first();
     let selected;
     if (currentNodeId) selected = { id: currentNodeId, name: state.nodes[currentNodeId].data.name, settings: state.nodes[currentNodeId].related && state.nodes[currentNodeId].related.settings };
     return { selected };
   });
-  return <aside className="space-y-3 rounded bg-white p-4 shadow"><h2 className="text-lg font-semibold">Settings</h2>{selected ? <><p className="text-sm text-slate-500">Selected: {selected.name}</p>{selected.settings && React.createElement(selected.settings)}</> : <p className="text-sm text-slate-500">Select a component to edit its props.</p>}</aside>;
+  return <aside className="space-y-3 rounded bg-white p-4 shadow"><h2 className="text-lg font-semibold">Settings</h2>{selected ? <><p className="text-sm text-slate-500">Selected: {selected.name}</p><button type="button" className="rounded bg-red-600 px-3 py-1 text-sm font-semibold text-white" onClick={() => actions.delete(selected.id)}>Delete Selected</button>{selected.settings && React.createElement(selected.settings)}</> : <p className="text-sm text-slate-500">Select a component to edit its props.</p>}</aside>;
 }
 
 function PersistedStateSync({ isPreview }: { isPreview: boolean }) {
