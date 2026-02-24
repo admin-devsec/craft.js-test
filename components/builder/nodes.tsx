@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useNode } from '@craftjs/core';
+import { usePreview } from '@/components/builder/PreviewContext';
 
 type WithChildren<T = Record<string, unknown>> = T & { children?: React.ReactNode };
 
@@ -12,12 +13,13 @@ export function Container({ children, background = '#ffffff', padding = 20 }: Wi
   } = useNode((state) => ({
     selected: state.events.selected
   }));
+  const { isPreview } = usePreview();
 
   return (
     <div
       ref={(ref) => { if (ref) connect(drag(ref)); }}
       style={{ background, padding }}
-      className={`min-h-12 rounded border border-dashed ${selected ? 'border-blue-500' : 'border-slate-300'}`}
+      className={`min-h-12 rounded ${isPreview ? '' : `border border-dashed ${selected ? 'border-blue-500' : 'border-slate-300'}`}`}
     >
       {children}
     </div>
@@ -63,17 +65,25 @@ Container.craft = {
   }
 };
 
-export function Text({ text = 'Edit me', fontSize = 18, color = '#0f172a' }: { text?: string; fontSize?: number; color?: string }) {
+const TEXT_ALIGN_CLASS: Record<'left' | 'center' | 'right' | 'justify', string> = {
+  left: 'text-left',
+  center: 'text-center',
+  right: 'text-right',
+  justify: 'text-justify'
+};
+
+export function Text({ text = 'Edit me', fontSize = 18, color = '#0f172a', align = 'left' }: { text?: string; fontSize?: number; color?: string; align?: 'left' | 'center' | 'right' | 'justify' }) {
   const {
     connectors: { connect, drag },
     selected
   } = useNode((state) => ({ selected: state.events.selected }));
+  const { isPreview } = usePreview();
 
   return (
     <p
       ref={(ref) => { if (ref) connect(drag(ref)); }}
       style={{ fontSize, color }}
-      className={`my-1 cursor-move ${selected ? 'outline outline-2 outline-blue-500' : ''}`}
+      className={`my-1 ${TEXT_ALIGN_CLASS[align]} ${isPreview ? '' : `cursor-move ${selected ? 'outline outline-2 outline-blue-500' : ''}`}`}
     >
       {text}
     </p>
@@ -85,11 +95,13 @@ function TextSettings() {
     actions: { setProp },
     text,
     fontSize,
-    color
+    color,
+    align
   } = useNode((node) => ({
     text: node.data.props.text,
     fontSize: node.data.props.fontSize,
-    color: node.data.props.color
+    color: node.data.props.color,
+    align: node.data.props.align
   }));
 
   return (
@@ -100,6 +112,13 @@ function TextSettings() {
       <input type="number" className="w-full rounded border p-2" value={fontSize} onChange={(e) => setProp((props: { fontSize: number }) => (props.fontSize = Number(e.target.value)))} />
       <label className="block text-sm font-medium">Color</label>
       <input className="w-full rounded border p-2" value={color} onChange={(e) => setProp((props: { color: string }) => (props.color = e.target.value))} />
+      <label className="block text-sm font-medium">Alignment</label>
+      <select className="w-full rounded border p-2" value={align} onChange={(e) => setProp((props: { align: 'left' | 'center' | 'right' | 'justify' }) => (props.align = e.target.value as 'left' | 'center' | 'right' | 'justify'))}>
+        <option value="left">Left</option>
+        <option value="center">Center</option>
+        <option value="right">Right</option>
+        <option value="justify">Justify</option>
+      </select>
     </div>
   );
 }
@@ -108,7 +127,8 @@ Text.craft = {
   props: {
     text: 'Edit me',
     fontSize: 18,
-    color: '#0f172a'
+    color: '#0f172a',
+    align: 'left'
   },
   related: {
     settings: TextSettings
@@ -120,13 +140,14 @@ export function Button({ text = 'Click me', background = '#2563eb', color = '#ff
     connectors: { connect, drag },
     selected
   } = useNode((state) => ({ selected: state.events.selected }));
+  const { isPreview } = usePreview();
 
   return (
     <button
       type="button"
       ref={(ref) => { if (ref) connect(drag(ref)); }}
       style={{ background, color }}
-      className={`rounded px-4 py-2 font-semibold ${selected ? 'ring-2 ring-blue-500' : ''}`}
+      className={`rounded px-4 py-2 font-semibold ${isPreview ? '' : selected ? 'ring-2 ring-blue-500' : ''}`}
     >
       {text}
     </button>
@@ -173,11 +194,12 @@ export function Header({ text = 'Header Section' }: { text?: string }) {
     connectors: { connect, drag },
     selected
   } = useNode((state) => ({ selected: state.events.selected }));
+  const { isPreview } = usePreview();
 
   return (
     <header
       ref={(ref) => { if (ref) connect(drag(ref)); }}
-      className={`rounded bg-slate-900 p-4 text-xl font-bold text-white ${selected ? 'ring-2 ring-blue-500' : ''}`}
+      className={`rounded bg-slate-900 p-4 text-xl font-bold text-white ${isPreview ? '' : selected ? 'ring-2 ring-blue-500' : ''}`}
     >
       {text}
     </header>
@@ -207,11 +229,12 @@ export function Footer({ text = 'Footer Section' }: { text?: string }) {
     connectors: { connect, drag },
     selected
   } = useNode((state) => ({ selected: state.events.selected }));
+  const { isPreview } = usePreview();
 
   return (
     <footer
       ref={(ref) => { if (ref) connect(drag(ref)); }}
-      className={`rounded bg-slate-700 p-4 text-center text-sm text-white ${selected ? 'ring-2 ring-blue-500' : ''}`}
+      className={`rounded bg-slate-700 p-4 text-center text-sm text-white ${isPreview ? '' : selected ? 'ring-2 ring-blue-500' : ''}`}
     >
       {text}
     </footer>
