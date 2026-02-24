@@ -1,8 +1,51 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Editor, Frame, Element, useEditor } from '@craftjs/core';
 import { Button, Container, Footer, Header, Text } from '@/components/builder/nodes';
+import { PreviewProvider } from '@/components/builder/PreviewContext';
+import Link from 'next/link';
+
+type Device = 'desktop' | 'tablet' | 'mobile';
+
+const DEVICE_WIDTHS: Record<Device, number> = {
+  desktop: 1200,
+  tablet: 768,
+  mobile: 375
+};
+
+const STORAGE_KEY = 'craft-builder-state';
+const PREVIEW_ID = 'latest';
+
+function TopBar({ isPreview, setIsPreview, device, setDevice }: { isPreview: boolean; setIsPreview: (value: boolean) => void; device: Device; setDevice: (value: Device) => void }) {
+  return (
+    <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded bg-white p-3 shadow">
+      <h1 className="text-lg font-semibold">Craft Builder</h1>
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          className="rounded bg-blue-600 px-3 py-1 text-sm font-semibold text-white"
+          onClick={() => setIsPreview(!isPreview)}
+        >
+          {isPreview ? 'Exit Preview' : 'Preview'}
+        </button>
+        <select
+          className="rounded border px-2 py-1 text-sm"
+          value={device}
+          onChange={(e) => setDevice(e.target.value as Device)}
+          disabled={!isPreview}
+        >
+          <option value="desktop">Desktop</option>
+          <option value="tablet">Tablet</option>
+          <option value="mobile">Mobile</option>
+        </select>
+        <Link href={`/preview/${PREVIEW_ID}`} className="rounded border border-slate-300 px-3 py-1 text-sm font-medium hover:bg-slate-50">
+          Open Share Preview
+        </Link>
+      </div>
+    </div>
+  );
+}
 
 function Toolbox() {
   const { connectors } = useEditor();
@@ -25,7 +68,7 @@ function Toolbox() {
 }
 
 function SettingsPanel() {
-  const { actions, selected, isEnabled } = useEditor((state, query) => {
+  const { selected } = useEditor((state, query) => {
     const currentNodeId = query.getEvent('selected').first();
     let selected;
 
@@ -38,23 +81,13 @@ function SettingsPanel() {
     }
 
     return {
-      selected,
-      isEnabled: state.options.enabled
+      selected
     };
   });
 
   return (
     <aside className="space-y-3 rounded bg-white p-4 shadow">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Settings</h2>
-        <button
-          type="button"
-          className="rounded bg-blue-600 px-3 py-1 text-sm font-semibold text-white"
-          onClick={() => actions.setOptions((options) => (options.enabled = !isEnabled))}
-        >
-          {isEnabled ? 'Preview' : 'Edit'}
-        </button>
-      </div>
+      <h2 className="text-lg font-semibold">Settings</h2>
       {selected ? (
         <>
           <p className="text-sm text-slate-500">Selected: {selected.name}</p>
@@ -67,24 +100,69 @@ function SettingsPanel() {
   );
 }
 
+function PersistedStateSync({ isPreview }: { isPreview: boolean }) {
+  const { query } = useEditor((state) => ({
+    nodes: state.nodes
+  }));
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const serialized = query.serialize();
+    localStorage.setItem(STORAGE_KEY, serialized);
+    localStorage.setItem(`craft-builder-state:${PREVIEW_ID}`, serialized);
+  }, [isPreview, query]);
+
+  return null;
+}
+
 export default function BuilderEditor() {
+  const [isPreview, setIsPreview] = useState(false);
+  const [device, setDevice] = useState<Device>('desktop');
+  const [initialData, setInitialData] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const savedState = localStorage.getItem(STORAGE_KEY) || undefined;
+    setInitialData(savedState);
+  }, []);
+
+  const canvasWidthClass = useMemo(() => {
+    if (!isPreview) return 'w-full';
+    return 'mx-auto w-full';
+  }, [isPreview]);
+
+  const canvasWidth = isPreview ? DEVICE_WIDTHS[device] : undefined;
+
   return (
-    <Editor resolver={{ Container, Header, Footer, Text, Button }}>
-      <main className="grid min-h-screen grid-cols-1 gap-4 p-4 lg:grid-cols-[240px_1fr_280px]">
-        <Toolbox />
-        <section className="rounded bg-white p-4 shadow">
-          <h2 className="mb-3 text-lg font-semibold">Canvas</h2>
-          <Frame>
-            <Element is={Container} canvas background="#f8fafc" padding={24}>
-              <Header text="Welcome to Craft.js" />
-              <Text text="Drag components from the toolbox into this canvas." />
-              <Button text="Primary Action" />
-              <Footer text="Builder footer" />
-            </Element>
-          </Frame>
-        </section>
-        <SettingsPanel />
-      </main>
-    </Editor>
+    <PreviewProvider isPreview={isPreview}>
+      <Editor resolver={{ Container, Header, Footer, Text, Button }} enabled={!isPreview}>
+        <main className="min-h-screen p-4">
+          <TopBar isPreview={isPreview} setIsPreview={setIsPreview} device={device} setDevice={setDevice} />
+          <div className={`grid gap-4 ${isPreview ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-[240px_1fr_280px]'}`}>
+            {!isPreview && <Toolbox />}
+            <section className="rounded bg-white p-4 shadow">
+              {!isPreview && <h2 className="mb-3 text-lg font-semibold">Canvas</h2>}
+              <div className={`${canvasWidthClass} overflow-auto`}>
+                <div
+                  className={`${isPreview ? 'mx-auto rounded-xl border border-slate-200 bg-white p-4 shadow-inner' : ''}`}
+                  style={canvasWidth ? { width: canvasWidth, maxWidth: '100%' } : undefined}
+                >
+                  <Frame data={initialData}>
+                    <Element is={Container} canvas background="#f8fafc" padding={24}>
+                      <Header text="Welcome to Craft.js" />
+                      <Text text="Drag components from the toolbox into this canvas." />
+                      <Button text="Primary Action" />
+                      <Footer text="Builder footer" />
+                    </Element>
+                  </Frame>
+                </div>
+              </div>
+              <PersistedStateSync isPreview={isPreview} />
+            </section>
+            {!isPreview && <SettingsPanel />}
+          </div>
+        </main>
+      </Editor>
+    </PreviewProvider>
   );
 }
